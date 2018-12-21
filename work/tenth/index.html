@@ -64,6 +64,63 @@
       //   // この中にデータ取得後の動きを記述していきます。
       // });
       //
+      $(function() {
+        var currentPage = 1;
+        var beforeWord = '';
+
+        $('.search__btn').on('click', search);
+
+        function search() {
+          var searchWord = $('.search__text__input').val();
+          console.log(searchWord);
+          console.log(beforeWord);
+          if (beforeWord === searchWord) {
+            currentPage ++;
+          } else {
+            $('.lists').empty();
+            currentPage = 1;
+          }
+          beforeWord = searchWord;
+          $.ajax({
+            url: 'https://app.rakuten.co.jp/services/api/BooksTotal/Search/20130522',
+            type: 'GET',
+            datatype: 'json',
+            data: {
+              // 「区分:サービス固有パラメーター」を確認して、必要な情報をdata内に入れましょう。
+              applicationId: '1019399324990976605', // (今回はこのIDを使用してください)
+              booksGenreId: '001',
+              hits: 20,
+              page: currentPage,
+              keyword: searchWord
+            },
+          }).done(success).fail(error);
+        }
+
+        function success(data) {
+          console.log(data);
+          var template = '';
+          var booksArray = data.Items;
+          if (data.hits === 0) {
+            nothing();
+          } else {
+            $.each(booksArray,function(i, item) {
+              var book = item.Item;
+              template += '<li class="lists__item">' + '<div class="lists__item__inner">' + '<a href="' + book.itemUrl + '"class="lists__item__link" target="_blank">' + '<img src="' + book.mediumImageUrl + '" class="lists__item__img" alt="' + book.title + '">' + '<p class="lists__item__detail">作品名：' + book.title + '</p>' + '<p class="lists__item__detail">作者　：' + book.author + '</p>' + '<p class="lists__item__detail">出版社：' + book.publisherName + '</p>' + '</a>' + '</div>' + '</li>';
+            });
+            $('.lists').prepend(template);
+          }
+        }
+
+        function nothing() {
+          $('.coment').remove();
+          $('.lists').prepend('<li class="coment">'+'<p class="message">'+'検索結果が見つかりませんでした。'+'<br>'+'別のキーワードで検索して下さい。'+'</p>'+' </li>');
+        }
+
+        function error() {
+          $('.coment').remove();
+          $('.lists').prepend('<li class="coment">'+'<p class="message">'+'データ通信できませんでした。'+'<br>'+'接続を確認してください。'+'</p>'+' </li>');
+        }
+      });
     </script>
   </body>
 </html>
